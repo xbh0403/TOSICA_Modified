@@ -32,13 +32,15 @@ class FeatureEmbed(nn.Module):
         self.num_genes = num_genes
         self.num_patches = mask.shape[1]
         self.embed_dim = embed_dim
-        mask = np.repeat(mask,embed_dim,axis=1)
+        # mask = np.repeat(mask,embed_dim,axis=1)
         self.mask = mask
         self.fe = CustomizedLinear(self.mask)
         self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
     def forward(self, x):
         num_cells = x.shape[0]
-        x = rearrange(self.fe(x), 'h (w c) -> h c w ', c=self.num_patches)
+        x = self.fe(x)
+        # x = rearrange(x, 'h (c w) -> h c w ', c=self.num_patches)
+        x = rearrange(x, 'd (p f) -> d p f ', p=self.num_patches)
         x = self.norm(x)
         return x
 
@@ -211,7 +213,9 @@ class Transformer(nn.Module):
         nn.init.trunc_normal_(self.cls_token, std=0.02)
         self.apply(_init_vit_weights)
     def forward_features(self, x):
+        # print("IN x: ", x.shape)
         x = self.feature_embed(x)
+        # print("After feature_embed: ", x.shape)
         cls_token = self.cls_token.expand(x.shape[0], -1, -1)
         if self.dist_token is None: #ViT中就是None
             x = torch.cat((cls_token, x), dim=1) 
@@ -254,7 +258,7 @@ def _init_vit_weights(m):
         nn.init.zeros_(m.bias)
         nn.init.ones_(m.weight)  
 
-def scTrans_model(num_classes, num_genes, mask, embed_dim=48,depth=2,num_heads=4,has_logits: bool = True):
+def scTrans_model(num_classes, num_genes, mask, embed_dim=768,depth=2,num_heads=4,has_logits: bool = True):
     model = Transformer(num_classes=num_classes, 
                         num_genes=num_genes, 
                         mask = mask,
