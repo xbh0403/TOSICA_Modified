@@ -215,7 +215,7 @@ def evaluate(model, data_loader, device, epoch):
                                                                                accu_num.item() / sample_num)
     return accu_loss.item() / (step + 1), accu_num.item() / sample_num
 
-def fit_model(adata, gmt_path, pre_weights='', label_name='Celltype',max_g=300,max_gs=300, mask_ratio = 0.015,n_unannotated = 1,batch_size=8, embed_dim=48,depth=2,num_heads=4,lr=0.001, epochs= 10, lrf=0.01):
+def fit_model(adata, llm, gmt_path, pre_weights='', label_name='Celltype',max_g=300,max_gs=300, mask_ratio = 0.015,n_unannotated = 1,batch_size=8, embed_dim=48,depth=2,num_heads=4,lr=0.001, epochs= 10, lrf=0.01):
     GLOBAL_SEED = 1
     set_seed(GLOBAL_SEED)
     device = 'cuda:0'
@@ -266,7 +266,7 @@ def fit_model(adata, gmt_path, pre_weights='', label_name='Celltype',max_g=300,m
                                              batch_size=batch_size,
                                              shuffle=False,
                                              pin_memory=True,drop_last=True)
-    model = create_model(num_classes=num_classes, num_genes=len(exp_train[0]),  mask = mask,embed_dim=embed_dim,depth=depth,num_heads=num_heads,has_logits=False).to(device) 
+    model = create_model(num_classes=num_classes, llm=llm, num_genes=len(exp_train[0]),  mask = mask,embed_dim=embed_dim,depth=depth,num_heads=num_heads,has_logits=False).to(device) 
     if pre_weights != "":
         assert os.path.exists(pre_weights), "pre_weights file: '{}' not exist.".format(pre_weights)
         preweights_dict = torch.load(pre_weights, map_location=device)
