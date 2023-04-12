@@ -27,14 +27,15 @@ class DropPath(nn.Module):
         return drop_path(x, self.drop_prob, self.training)
 
 class FeatureEmbed(nn.Module):
-    def __init__(self, num_genes, mask, embed_dim=192, fe_bias=True, norm_layer=None):
+    def __init__(self, num_genes, mask, llm, embed_dim=192, fe_bias=True, norm_layer=None):
         super().__init__()
         self.num_genes = num_genes
         self.num_patches = mask.shape[1]
         self.embed_dim = embed_dim
         # mask = np.repeat(mask,embed_dim,axis=1)
         self.mask = mask
-        self.fe = CustomizedLinear(self.mask)
+        self.llm = llm
+        self.fe = CustomizedLinear(self.mask, self.llm)
         self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
     def forward(self, x):
         num_cells = x.shape[0]
@@ -146,7 +147,7 @@ def get_weight(att_mat):
     return v
 
 class Transformer(nn.Module):
-    def __init__(self, num_classes, num_genes, mask, fe_bias=True,
+    def __init__(self, num_classes, num_genes, mask, llm, fe_bias=True,
                  embed_dim=768, depth=12, num_heads=12, mlp_ratio=4.0, qkv_bias=True,
                  qk_scale=None, representation_size=None, distilled=False, drop_ratio=0.,
                  attn_drop_ratio=0., drop_path_ratio=0., embed_layer=FeatureEmbed, norm_layer=None,
@@ -175,7 +176,7 @@ class Transformer(nn.Module):
         self.num_tokens = 2 if distilled else 1
         norm_layer = norm_layer or partial(nn.LayerNorm, eps=1e-6)
         act_layer = act_layer or nn.GELU
-        self.feature_embed = embed_layer(num_genes, mask = mask, embed_dim=embed_dim, fe_bias=fe_bias)
+        self.feature_embed = embed_layer(num_genes, mask = mask, llm = llm, embed_dim=embed_dim, fe_bias=fe_bias)
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.dist_token = nn.Parameter(torch.zeros(1, 1, embed_dim)) if distilled else None
         dpr = [x.item() for x in torch.linspace(0, drop_path_ratio, depth)]
@@ -258,10 +259,10 @@ def _init_vit_weights(m):
         nn.init.zeros_(m.bias)
         nn.init.ones_(m.weight)  
 
-def scTrans_model(num_classes, num_genes, mask, embed_dim=768,depth=2,num_heads=4,has_logits: bool = True):
+def scTrans_model(num_classes, num_genes, mask, llm, embed_dim=768,depth=2,num_heads=4,has_logits: bool = True):
     model = Transformer(num_classes=num_classes, 
                         num_genes=num_genes, 
-                        mask = mask,
+                        mask = mask, llm = llm,
                         embed_dim=embed_dim,
                         depth=depth,
                         num_heads=num_heads,

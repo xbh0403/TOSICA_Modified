@@ -79,7 +79,7 @@ class CustomizedLinearFunction(torch.autograd.Function):
 
 
 class CustomizedLinear(nn.Module):
-    def __init__(self, mask, bias=True):
+    def __init__(self, mask, llm="sentence_bert", bias=True):
         """
         extended torch.nn module which mask connection.
         Args:
@@ -111,7 +111,7 @@ class CustomizedLinear(nn.Module):
         # nn.Parameters require gradients by default.
         self.weight = nn.Parameter(torch.Tensor(self.output_features, self.input_features))
         # self.gene_embedding = pd.read_csv('/Users/xbh0403/Desktop/TOSICA/TOSICA/resources/gene_embedding.csv', index_col=0).iloc[:, -768:] # TODO
-        self.gene_embedding = pd.read_csv(root / 'resources/gene_embedding.csv', index_col=0).iloc[:, -768:] # TODO
+        self.gene_embedding = pd.read_csv(root / 'resources/gene_embedding_{}.csv'.format(llm), index_col=0).iloc[:, -768:] # TODO
         self.gene_embedding = torch.tensor(self.gene_embedding.values, dtype=torch.float).to("cuda:0")
 
         if bias:
