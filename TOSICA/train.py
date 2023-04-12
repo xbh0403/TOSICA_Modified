@@ -266,7 +266,7 @@ def fit_model(adata, llm, gmt_path, pre_weights='', label_name='Celltype',max_g=
                                              batch_size=batch_size,
                                              shuffle=False,
                                              pin_memory=True,drop_last=True)
-    model = create_model(num_classes=num_classes, llm=llm, num_genes=len(exp_train[0]),  mask = mask,embed_dim=embed_dim,depth=depth,num_heads=num_heads,has_logits=False).to(device) 
+    model = create_model(num_classes=num_classes, num_genes=len(exp_train[0]), mask = mask, llm=llm, embed_dim=embed_dim,depth=depth,num_heads=num_heads,has_logits=False).to(device) 
     if pre_weights != "":
         assert os.path.exists(pre_weights), "pre_weights file: '{}' not exist.".format(pre_weights)
         preweights_dict = torch.load(pre_weights, map_location=device)

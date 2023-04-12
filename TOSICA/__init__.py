@@ -64,7 +64,7 @@ def train(adata, llm, gmt_path, pre_weights='', label_name='Celltype',max_g=300,
     ./weights20220603/
         Weights
     """
-    fit_model(adata, gmt_path, pre_weights=pre_weights, label_name=label_name, llm=llm,
+    fit_model(adata, llm, gmt_path, pre_weights=pre_weights, label_name=label_name, 
               max_g=max_g,max_gs=max_gs,mask_ratio=mask_ratio, n_unannotated = n_unannotated,batch_size=batch_size, 
               embed_dim=embed_dim,depth=depth,num_heads=num_heads,lr=lr, epochs= epochs, lrf=lrf)
 
